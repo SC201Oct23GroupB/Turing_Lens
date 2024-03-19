@@ -1,8 +1,8 @@
-flask~=3.0.2
+flask
 line-bot-sdk
-gunicorn~=21.2.0
-torch~=2.2.1
-torchvision~=0.17.1
-pillow~=10.1.0
-numpy~=1.26.2
+gunicorn
+torch
+torchvision
+pillow
+numpy
 io
