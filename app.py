@@ -37,44 +37,44 @@ configuration = Configuration(access_token=CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(CHANNEL_SECRET)
 
 # Load your pre-trained ResNet50 model
-# TRAINED_WEIGHTS = "resnet50_finetuned_weights_0312.pth"
-#
-# model = resnet50(num_classes=4)
-# model.load_state_dict(torch.load(TRAINED_WEIGHTS, map_location=torch.device('cpu')))
-# model.eval()
-#
-#
-# # Define image preprocessing function
-# SIZE = 448
-#
-# def preprocess(image):
-#     preprocess = T.Compose([T.Resize((SIZE, SIZE)), T.ToTensor()])
-#     input_tensor = preprocess(image)
-#     input_batch = input_tensor.unsqueeze(0)  # Add batch dimension
-#     return input_batch
-#
-#
-# # Function to predict whether image is AI-generated
-#
-# def predict_image(input_image):
-#     image = Image.fromarray(input_image.astype('uint8'), 'RGB') # 将NumPy数组转换为PIL图像
-#     input_tensor = preprocess(image)
-#     with torch.no_grad():
-#         output = model(input_tensor)
-#         probabilities = torch.softmax(output, dim=1)
-#         probabilities = probabilities.squeeze().numpy()
-#
-#         probabilities_dict = {
-#             'portrait':probabilities[0],
-#             'Midjourney':probabilities[1],
-#             'Stable Diffusion':probabilities[2],
-#             'Bing':probabilities[3],
-#         }
-#         predictions=output.max(1)[1].item()
-#     map_dict = {0:'portrait', 1:'Midjourney', 2:'Stable Diffusion', 3:'Bing'}
-#     ans = f"This is made by: {map_dict[predictions]}"
-#
-#     return ans
+TRAINED_WEIGHTS = "resnet50_finetuned_weights_0312.pth"
+
+model = resnet50(num_classes=4)
+model.load_state_dict(torch.load(TRAINED_WEIGHTS))
+model.eval()
+
+# Define image preprocessing function
+SIZE = 448
+
+
+def preprocess(image):
+    transform = T.Compose([T.Resize((SIZE, SIZE)), T.ToTensor()])
+    input_tensor = transform(image)
+    input_batch = input_tensor.unsqueeze(0)  # Add batch dimension
+    return input_batch
+
+
+# Function to predict whether image is AI-generated
+
+def predict_image(input_image):
+    image = Image.fromarray(input_image.astype('uint8'), 'RGB') # 将NumPy数组转换为PIL图像
+    input_tensor = preprocess(image)
+    with torch.no_grad():
+        output = model(input_tensor)
+        probabilities = torch.softmax(output, dim=1)
+        probabilities = probabilities.squeeze().numpy()
+
+        probabilities_dict = {
+            'portrait':probabilities[0],
+            'Midjourney':probabilities[1],
+            'Stable Diffusion':probabilities[2],
+            'Bing':probabilities[3],
+        }
+        predictions=output.max(1)[1].item()
+    map_dict = {0:'portrait', 1:'Midjourney', 2:'Stable Diffusion', 3:'Bing'}
+    ans = f"This is made by: {map_dict[predictions]}"
+
+    return ans
 
 
 @app.route("/callback", methods=['POST'])
@@ -99,12 +99,12 @@ def callback():
 # Reply for Image Message here
 @handler.add(MessageEvent, message=ImageMessageContent)
 def handle_image_message(event):
-    # with ApiClient(configuration) as api_client:
-    #     line_bot_blob_api = MessagingApiBlob(api_client)
-    #     message_content = line_bot_blob_api.get_message_content(message_id=event.message.id)
-    #     image = Image.open(io.BytesIO(message_content))
-    #     image_np = np.array(image)
-    #     reply_message = predict_image(image_np)
+    with ApiClient(configuration) as api_client:
+        line_bot_blob_api = MessagingApiBlob(api_client)
+        message_content = line_bot_blob_api.get_message_content(message_id=event.message.id)
+        image = Image.open(io.BytesIO(message_content))
+        image_np = np.array(image)
+        reply_message = predict_image(image_np)
 
     reply_message = 'Under construction'
     with ApiClient(configuration) as api_client:
