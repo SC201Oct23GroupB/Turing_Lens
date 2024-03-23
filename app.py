@@ -26,6 +26,7 @@ from torchvision.models import resnet50
 from PIL import Image
 import numpy as np
 import io
+import os
 
 app = Flask(__name__)
 
@@ -36,8 +37,11 @@ CHANNEL_ACCESS_TOKEN = 'gjl/0a99GFN1kuY1L1jtBCLrusNphO/Xw9I1DBDNZlVaxlRjrR+uSqwo
 configuration = Configuration(access_token=CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(CHANNEL_SECRET)
 
+# Get the directory of the current script
+script_dir = os.path.dirname(__file__)
+
 # Load your pre-trained ResNet50 model
-TRAINED_WEIGHTS = "resnet50_finetuned_weights_0312.pth"
+TRAINED_WEIGHTS = os.path.join(script_dir, "resnet50_finetuned_weights_0312.pth")
 
 model = resnet50(num_classes=4)
 model.load_state_dict(torch.load(TRAINED_WEIGHTS))
