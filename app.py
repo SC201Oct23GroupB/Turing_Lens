@@ -37,14 +37,8 @@ CHANNEL_ACCESS_TOKEN = 'gjl/0a99GFN1kuY1L1jtBCLrusNphO/Xw9I1DBDNZlVaxlRjrR+uSqwo
 configuration = Configuration(access_token=CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(CHANNEL_SECRET)
 
-# Get the directory of the current script
-script_dir = os.path.dirname(__file__)
-
-# Load your pre-trained ResNet50 model
-TRAINED_WEIGHTS = os.path.join(script_dir, "resnet50_finetuned_weights.pth")
-
 model = resnet50(num_classes=4)
-model.load_state_dict(torch.load(TRAINED_WEIGHTS))
+model.load_state_dict(torch.load("resnet50_finetuned_weights.pth", map_location=torch.device('cpu')))
 model.eval()
 
 # Define image preprocessing function
