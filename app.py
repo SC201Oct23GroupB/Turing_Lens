@@ -41,7 +41,7 @@ handler = WebhookHandler(CHANNEL_SECRET)
 script_dir = os.path.dirname(__file__)
 
 # Load your pre-trained ResNet50 model
-TRAINED_WEIGHTS = os.path.join(script_dir, "resnet50_finetuned_weights_0312.pth")
+TRAINED_WEIGHTS = os.path.join(script_dir, "resnet50_finetuned_weights.pth")
 
 model = resnet50(num_classes=4)
 model.load_state_dict(torch.load(TRAINED_WEIGHTS))
