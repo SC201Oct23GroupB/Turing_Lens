@@ -37,40 +37,36 @@ CHANNEL_ACCESS_TOKEN = 'gjl/0a99GFN1kuY1L1jtBCLrusNphO/Xw9I1DBDNZlVaxlRjrR+uSqwo
 configuration = Configuration(access_token=CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(CHANNEL_SECRET)
 
-model = resnet50(num_classes=4)
-model.load_state_dict(torch.load("resnet50_finetuned_weights.pth", map_location=torch.device('cpu')))
-model.eval()
-
 # Define image preprocessing function
 SIZE = 448
 
 
-def preprocess(image):
+def predict(image):
     transform = T.Compose([T.Resize((SIZE, SIZE)), T.ToTensor()])
-    input_tensor = transform(image)
-    input_batch = input_tensor.unsqueeze(0)  # Add batch dimension
-    return input_batch
+    img_trans = transform(image).unsqeeze(0)
 
+    model = resnet50(num_classes=4)
+    model.load_state_dict(torch.load("resnet50_finetuned_weights.pth", map_location=torch.device('cpu')))
+    model.eval()
 
-# Function to predict whether image is AI-generated
+    prediction = None
 
-def predict_image(input_image):
-    image = Image.fromarray(input_image.astype('uint8'), 'RGB') # 将NumPy数组转换为PIL图像
-    input_tensor = preprocess(image)
     with torch.no_grad():
-        output = model(input_tensor)
-        probabilities = torch.softmax(output, dim=1)
-        probabilities = probabilities.squeeze().numpy()
+        output = model(img_trans)
+        prob = torch.softmax(output, dim=1)
+        prob = prob.squeeze().numpy()
 
-        probabilities_dict = {
-            'portrait':probabilities[0],
-            'Midjourney':probabilities[1],
-            'Stable Diffusion':probabilities[2],
-            'Bing':probabilities[3],
+        label_dict = {
+            'portrait': prob[0],
+            'Midjourney': prob[1],
+            'Stable Diffusion': prob[2],
+            'Bing': prob[3]
         }
-        predictions=output.max(1)[1].item()
-    map_dict = {0:'portrait', 1:'Midjourney', 2:'Stable Diffusion', 3:'Bing'}
-    ans = f"This is made by: {map_dict[predictions]}"
+
+        prediction = output.max(1)[1].item()
+
+    map_dict = {0: 'portrait', 1: 'Midjourney', 2: 'Stable Diffusion', 3: 'Bing'}
+    ans = f"This is made by: {map_dict[prediction]}"
 
     return ans
 
@@ -98,19 +94,19 @@ def callback():
 @handler.add(MessageEvent, message=ImageMessageContent)
 def handle_image_message(event):
     with ApiClient(configuration) as api_client:
-        line_bot_blob_api = MessagingApiBlob(api_client)
-        message_content = line_bot_blob_api.get_message_content(message_id=event.message.id)
-        image = Image.open(io.BytesIO(message_content))
-        image_np = np.array(image)
-        reply_message = predict_image(image_np)
-
-    reply_message = 'Under construction'
-    with ApiClient(configuration) as api_client:
         line_bot_api = MessagingApi(api_client)
+        message_content = line_bot_api.get_message_content(message_id=event.message.id).content
+        image = Image.open(io.BytesIO(message_content))
+
+        try:
+            prediction = predict(image)
+        except:
+            print('error')
+
         line_bot_api.reply_message_with_http_info(
             ReplyMessageRequest(
                 reply_token=event.reply_token,
-                messages=[TextMessage(text=reply_message)]
+                messages=[TextMessage(text=prediction)]
             )
         )
 
