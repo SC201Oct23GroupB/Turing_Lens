@@ -27,13 +27,21 @@ SIZE = 448
 
 
 def predict(image):
+    print('Activate transform')
     transform = T.Compose([T.Resize((SIZE, SIZE)), T.ToTensor()])
-    img_trans = transform(image).unsqeeze(0)
+    print('Transform activated')
 
+    print('Send in image to transform')
+    img_trans = transform(image).unsqeeze(0)
+    print('Image transform completed')
+
+    print('Activate model')
     model = resnet50(num_classes=4)
     model.load_state_dict(torch.load("resnet50_finetuned_weights.pth", map_location=torch.device('cpu')))
     model.eval()
 
+
+    print('Start prediction')
     prediction = None
 
     with torch.no_grad():
@@ -41,7 +49,7 @@ def predict(image):
         prob = torch.softmax(output, dim=1)
         prob = prob.squeeze().numpy()
 
-        label_dict = {
+        prob_dict = {
             'portrait': prob[0],
             'Midjourney': prob[1],
             'Stable Diffusion': prob[2],
@@ -51,7 +59,7 @@ def predict(image):
         prediction = output.max(1)[1].item()
 
     map_dict = {0: 'portrait', 1: 'Midjourney', 2: 'Stable Diffusion', 3: 'Bing'}
-    ans = f"This is made by: {label_dict[prediction]}"
+    ans = f"This is made by: {map_dict[prediction]}"
 
     return ans
 
