@@ -1,23 +1,9 @@
 from flask import Flask, request, abort
-
-from linebot.v3 import (
-    WebhookHandler
-)
-from linebot.v3.exceptions import (
-    InvalidSignatureError
-)
-from linebot.v3.messaging import (
-    Configuration,
-    ApiClient,
-    MessagingApi,
-    MessagingApiBlob,
-    ReplyMessageRequest,
-    TextMessage
-)
-from linebot.v3.webhooks import (
-    MessageEvent,
-    TextMessageContent,
-    ImageMessageContent
+from linebot import LineBotApi, WebhookHandler
+from linebot.exceptions import InvalidSignatureError
+from linebot.models import (
+    MessageEvent, TextMessage, TextSendMessage,
+    ImageMessage, VideoMessage, AudioMessage
 )
 
 import torch
@@ -25,7 +11,9 @@ import torchvision.transforms as T
 from torchvision.models import resnet50
 from PIL import Image
 import numpy as np
-import io
+import json
+import requests
+from io import BytesIO
 import os
 
 app = Flask(__name__)
@@ -33,9 +21,6 @@ app = Flask(__name__)
 # Tokens are stored here
 CHANNEL_SECRET = 'd6e0a625ea6f530fd43e3e6459597e24'
 CHANNEL_ACCESS_TOKEN = 'gjl/0a99GFN1kuY1L1jtBCLrusNphO/Xw9I1DBDNZlVaxlRjrR+uSqwoBJ07YKDASeFRxDEJhG5LBoQ5w8tTFV6K97hEzoV1gM7IVgCFtaGIZqknPEmG07RNREUekR0Xpu9Is5DGmZs2sBqb1Ny/EwdB04t89/1O/w1cDnyilFU='
-
-configuration = Configuration(access_token=CHANNEL_ACCESS_TOKEN)
-handler = WebhookHandler(CHANNEL_SECRET)
 
 # Define image preprocessing function
 SIZE = 448
@@ -73,56 +58,46 @@ def predict(image):
 
 @app.route("/callback", methods=['POST'])
 def callback():
-    # get X-Line-Signature header value
-    signature = request.headers['X-Line-Signature']
-
-    # get request body as text
     body = request.get_data(as_text=True)
-    app.logger.info("Request body: " + body)
-
-    # handle webhook body
     try:
+        access_token = CHANNEL_ACCESS_TOKEN
+        secret = CHANNEL_SECRET
+        json_data = json.loads(body)
+        print(json_data)
+        line_bot_api = LineBotApi(access_token)
+        handler = WebhookHandler(secret)
+        signature = request.headers['X-Line-Signature']
         handler.handle(body, signature)
-    except InvalidSignatureError:
-        app.logger.info("Invalid signature. Please check your channel access token/channel secret.")
-        abort(400)
-
+        if json_data['events'][0]['message']['type'] == 'image':
+            image_handler(json_data, line_bot_api)
+        else:
+            text_handler(json_data, line_bot_api)
+    except:
+        print(request.args)
     return 'OK'
 
 
 # Reply for Image Message here
-@handler.add(MessageEvent, message=ImageMessageContent)
-def handle_image_message(event):
-    with ApiClient(configuration) as api_client:
-        line_bot_api = MessagingApi(api_client)
-        message_content = line_bot_api.get_message_content(message_id=event.message.id).content
-        image = Image.open(io.BytesIO(message_content))
+def image_handler(json_data, line_bot_api):
+    msg_id = json_data['events'][0]['message']['id']
+    img = line_bot_api.get_message_content(msg_id).content
+    reply_token = json_data['events'][0]['replyToken']
+    image = Image.open(BytesIO(img))
 
-        try:
-            prediction = predict(image)
-        except:
-            print('error')
+    try:
+        prediction = predict(image)
+    except:
+        prediction = 'error'
+        print(request.args)
 
-        line_bot_api.reply_message_with_http_info(
-            ReplyMessageRequest(
-                reply_token=event.reply_token,
-                messages=[TextMessage(text=prediction)]
-            )
-        )
+    line_bot_api.reply_message(reply_token, TextSendMessage(prediction))
 
 
 # Shows standard reply for message other than images
-@handler.add(MessageEvent)
-def handle_message(event):
+def text_handler(json_data, line_bot_api):
     reply_message = 'My superpower only works on portrait photos! Send it my way and I\'ll tell you if it\'s a work of art or AI magic! 🪄'
-    with ApiClient(configuration) as api_client:
-        line_bot_api = MessagingApi(api_client)
-        line_bot_api.reply_message_with_http_info(
-            ReplyMessageRequest(
-                reply_token=event.reply_token,
-                messages=[TextMessage(text=reply_message)]
-            )
-        )
+    reply_token = json_data['events'][0]['replyToken']
+    line_bot_api.reply_message(reply_token, TextSendMessage(reply_message))
 
 
 if __name__ == "__main__":
