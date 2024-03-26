@@ -28,7 +28,10 @@ SIZE = 448
 
 def predict(image):
     print('Activate transform')
-    transform = T.Compose([T.Resize((SIZE, SIZE)), T.ToTensor()])
+    transform = T.Compose([
+        T.Resize((SIZE, SIZE)),
+        T.ToTensor()
+    ])
     print('Transform activated')
 
     print('Send in image to transform')
@@ -88,9 +91,13 @@ def callback():
 # Reply for Image Message here
 def image_handler(json_data, line_bot_api):
     msg_id = json_data['events'][0]['message']['id']
+    print(msg_id)
     img = line_bot_api.get_message_content(msg_id).content
+    print(img)
     reply_token = json_data['events'][0]['replyToken']
+    print(reply_token)
     image = Image.open(BytesIO(img))
+    print(image)
 
     try:
         prediction = predict(image)
