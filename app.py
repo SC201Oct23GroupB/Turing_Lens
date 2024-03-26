@@ -35,7 +35,7 @@ def predict(image):
     print('Transform activated')
 
     print('Send in image to transform')
-    img_trans = transform(image).unsqeeze(0)
+    img_trans = transform(image).unsqueeze(0)
     print('Image transform completed')
 
     print('Activate model')
