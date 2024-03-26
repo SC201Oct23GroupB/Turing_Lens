@@ -51,7 +51,7 @@ def predict(image):
         prediction = output.max(1)[1].item()
 
     map_dict = {0: 'portrait', 1: 'Midjourney', 2: 'Stable Diffusion', 3: 'Bing'}
-    ans = f"This is made by: {map_dict[prediction]}"
+    ans = f"This is made by: {label_dict[prediction]}"
 
     return ans
 
