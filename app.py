@@ -105,7 +105,7 @@ def image_handler(json_data, line_bot_api):
     image = Image.open(BytesIO(img))
 
     # Resize the image before sending into the function
-    resized_image = resize_image(image, SIZE)
+    resized_image = image.resize((SIZE, SIZE))
 
     try:
         prediction = predict(resized_image)
