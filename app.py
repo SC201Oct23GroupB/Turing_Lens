@@ -25,6 +25,10 @@ CHANNEL_ACCESS_TOKEN = 'gjl/0a99GFN1kuY1L1jtBCLrusNphO/Xw9I1DBDNZlVaxlRjrR+uSqwo
 # Define image preprocessing function
 SIZE = 448
 
+# Define the threshold for replies
+UPPER = 60
+LOWER = 40
+
 
 def predict(image):
     print('Activate transform')
@@ -44,7 +48,7 @@ def predict(image):
     model.eval()
 
     print('Start prediction')
-    prediction = None
+    # prediction = None
 
     with torch.no_grad():
         output = model(img_trans)
@@ -58,10 +62,17 @@ def predict(image):
             'Bing': prob[3]
         }
 
-        prediction = output.max(1)[1].item()
+        # prediction = output.max(1)[1].item()
+    portrait_pct = round(prob_dict['portrait'] * 100)
+    if portrait_pct >= UPPER:
+        ans = f"We are confident that this is a true portrait with {portrait_pct}% certainty! 🖼️"
+    elif LOWER <= portrait_pct < UPPER:
+        ans = "We recommend validating with caution, as we are not entirely certain if this is a true portrait. 🧐"
+    else:
+        ans = f"We are {100 - portrait_pct}% confident that this is an AI-generated portrait. 🤖"
 
-    map_dict = {0: 'portrait', 1: 'Midjourney', 2: 'Stable Diffusion', 3: 'Bing'}
-    ans = f"This is made by: {map_dict[prediction]}"
+    # map_dict = {0: 'portrait', 1: 'Midjourney', 2: 'Stable Diffusion', 3: 'Bing'}
+    # ans = f"This is made by: {map_dict[prediction]}"
 
     return ans
 
