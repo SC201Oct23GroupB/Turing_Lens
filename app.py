@@ -29,22 +29,25 @@ SIZE = 448
 UPPER = 60
 LOWER = 40
 
+# Load the model and transform
+print('Activate model')
+model = resnet50(num_classes=4)
+model.load_state_dict(torch.load("resnet50_finetuned_weights_0325_6_800.pth", map_location=torch.device('cpu')))
+model.eval()
+
+print('Activate transform')
+transform = T.Compose([
+    T.Resize((SIZE, SIZE)),
+    T.ToTensor()
+])
+print('Transform activated')
+
 
 def predict(image):
-    print('Activate transform')
-    transform = T.Compose([
-        T.ToTensor()
-    ])
-    print('Transform activated')
 
     print('Send in image to transform')
     img_trans = transform(image).unsqueeze(0)
     print('Image transform completed')
-
-    print('Activate model')
-    model = resnet50(num_classes=4)
-    model.load_state_dict(torch.load("resnet50_finetuned_weights_0325_6_800.pth", map_location=torch.device('cpu')))
-    model.eval()
 
     print('Start prediction')
     # prediction = None
