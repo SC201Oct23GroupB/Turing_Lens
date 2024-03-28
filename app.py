@@ -23,7 +23,7 @@ CHANNEL_SECRET = 'd6e0a625ea6f530fd43e3e6459597e24'
 CHANNEL_ACCESS_TOKEN = 'gjl/0a99GFN1kuY1L1jtBCLrusNphO/Xw9I1DBDNZlVaxlRjrR+uSqwoBJ07YKDASeFRxDEJhG5LBoQ5w8tTFV6K97hEzoV1gM7IVgCFtaGIZqknPEmG07RNREUekR0Xpu9Is5DGmZs2sBqb1Ny/EwdB04t89/1O/w1cDnyilFU='
 
 # Define the size of short edge of the image
-SIZE = 224
+SIZE = 448
 
 # Define the threshold for replies
 UPPER = 60
