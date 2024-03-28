@@ -22,6 +22,9 @@ app = Flask(__name__)
 CHANNEL_SECRET = 'd6e0a625ea6f530fd43e3e6459597e24'
 CHANNEL_ACCESS_TOKEN = 'gjl/0a99GFN1kuY1L1jtBCLrusNphO/Xw9I1DBDNZlVaxlRjrR+uSqwoBJ07YKDASeFRxDEJhG5LBoQ5w8tTFV6K97hEzoV1gM7IVgCFtaGIZqknPEmG07RNREUekR0Xpu9Is5DGmZs2sBqb1Ny/EwdB04t89/1O/w1cDnyilFU='
 
+# Define the size of short edge of the image
+SIZE = 224
+
 # Define the threshold for replies
 UPPER = 60
 LOWER = 40
@@ -97,18 +100,17 @@ def callback():
 # Reply for Image Message here
 def image_handler(json_data, line_bot_api):
     msg_id = json_data['events'][0]['message']['id']
-    print(msg_id)
     img = line_bot_api.get_message_content(msg_id).content
-    print(img)
     reply_token = json_data['events'][0]['replyToken']
-    print(reply_token)
     image = Image.open(BytesIO(img))
-    print(image)
+
+    # Resize the image before sending into the function
+    resized_image = resize_image(image, SIZE)
 
     try:
-        prediction = predict(image)
-    except:
-        prediction = 'error'
+        prediction = predict(resized_image)
+    except Exception as e:
+        prediction = f'Error: {e}'
         print(request.args)
 
     line_bot_api.reply_message(reply_token, TextSendMessage(prediction))
@@ -119,6 +121,20 @@ def text_handler(json_data, line_bot_api):
     reply_message = 'My superpower only works on portrait photos! Send it my way and I\'ll tell you if it\'s a work of art or AI magic! 🪄'
     reply_token = json_data['events'][0]['replyToken']
     line_bot_api.reply_message(reply_token, TextSendMessage(reply_message))
+
+
+def resize_image(image, short_edge_size):
+    width, height = image.size
+    aspect_ratio = width / height
+
+    if width < height:
+        new_width = short_edge_size
+        new_height = int(short_edge_size / aspect_ratio)
+    else:
+        new_height = short_edge_size
+        new_width = int(short_edge_size * aspect_ratio)
+
+    return image.resize((new_width, new_height))
 
 
 if __name__ == "__main__":
