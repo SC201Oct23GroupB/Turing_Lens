@@ -25,11 +25,6 @@ CHANNEL_ACCESS_TOKEN = 'gjl/0a99GFN1kuY1L1jtBCLrusNphO/Xw9I1DBDNZlVaxlRjrR+uSqwo
 # Define image preprocessing function
 SIZE = 448
 
-print('Activate model')
-model = resnet50(num_classes=4)
-model.load_state_dict(torch.load("resnet50_finetuned_weights_0325_6_800.pth", map_location=torch.device('cpu')))
-model.eval()
-
 
 def predict(image):
     print('Activate transform')
@@ -42,6 +37,11 @@ def predict(image):
     print('Send in image to transform')
     img_trans = transform(image).unsqueeze(0)
     print('Image transform completed')
+
+    print('Activate model')
+    model = resnet50(num_classes=4)
+    model.load_state_dict(torch.load("resnet50_finetuned_weights_0325_6_800.pth", map_location=torch.device('cpu')))
+    model.eval()
 
     print('Start prediction')
     prediction = None
