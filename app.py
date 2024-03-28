@@ -22,9 +22,6 @@ app = Flask(__name__)
 CHANNEL_SECRET = 'd6e0a625ea6f530fd43e3e6459597e24'
 CHANNEL_ACCESS_TOKEN = 'gjl/0a99GFN1kuY1L1jtBCLrusNphO/Xw9I1DBDNZlVaxlRjrR+uSqwoBJ07YKDASeFRxDEJhG5LBoQ5w8tTFV6K97hEzoV1gM7IVgCFtaGIZqknPEmG07RNREUekR0Xpu9Is5DGmZs2sBqb1Ny/EwdB04t89/1O/w1cDnyilFU='
 
-# Define image preprocessing function
-SIZE = 448
-
 # Define the threshold for replies
 UPPER = 60
 LOWER = 40
@@ -33,7 +30,6 @@ LOWER = 40
 def predict(image):
     print('Activate transform')
     transform = T.Compose([
-        T.Resize((SIZE, SIZE)),
         T.ToTensor()
     ])
     print('Transform activated')
@@ -65,11 +61,11 @@ def predict(image):
         # prediction = output.max(1)[1].item()
     portrait_pct = round(prob_dict['portrait'] * 100)
     if portrait_pct >= UPPER:
-        ans = f"We are confident that this is a true portrait with {portrait_pct}% certainty! 🖼️"
+        ans = f"I'm confident that this is a true portrait with {portrait_pct}% certainty! 📷️"
     elif LOWER <= portrait_pct < UPPER:
-        ans = "We recommend validating with caution, as we are not entirely certain if this is a true portrait. 🧐"
+        ans = "I recommend validating with caution, as we are not entirely certain if this is a true portrait. 🧐"
     else:
-        ans = f"We are {100 - portrait_pct}% confident that this is an AI-generated portrait. 🤖"
+        ans = f"I'm {100 - portrait_pct}% confident that this is an AI-generated portrait. 🤖"
 
     # map_dict = {0: 'portrait', 1: 'Midjourney', 2: 'Stable Diffusion', 3: 'Bing'}
     # ans = f"This is made by: {map_dict[prediction]}"
